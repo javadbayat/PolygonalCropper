@@ -1,0 +1,380 @@
+<html xmlns:t xmlns:fc xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+    <title>Polygonal Cropper</title>
+    <hta:application id="app" applicationname="Polygonal Cropper" version="1.0" icon="ui\icon.ico" windowstate="maximize" innerborder="off" />
+    
+    <meta name="author" content="Javad Bayat">
+    <meta http-equiv="content-type" content="text/html; charset = UTF-8">
+    <meta http-equiv="MSThemeCompatible" content="Yes">
+    
+    <?import namespace="fc" implementation="ui\intbox.htc" ?>
+    <?import namespace="t" implementation="threading\omegathread.htc" ?>
+    
+    <link rel="stylesheet" href="ui\ui.css" type="text/css">
+    
+    <script src="ui\polygonPage.js" type="text/jscript"></script>
+    
+    <script language="jscript">
+        var wshShell = new ActiveXObject("WScript.Shell");
+        var shell = new ActiveXObject("Shell.Application");
+        var fso = new ActiveXObject("Scripting.FileSystemObject");
+        var appName = document.title;
+        var tmid = 0;
+        var abortionRequest = false;
+        
+        var TEM_EXEC_HALTED = 1;
+
+        function initiatePolygonalCrop(imagePath, vertices) {
+            operationPage.style.display = "";
+            document.title = appName + " (0%)";
+            
+            divProgressBar.style.backgroundColor = "threedface";
+            divProgressBar.filters[0].apply();
+            divProgressBar.filters[0].Percent = 0;
+            divProgressBar.style.backgroundColor = "blue";
+            
+            btnSaveImage.onclick = saveImage;
+            btnAbort.onclick = abortPolygonalCrop;
+            cropperThread.onbeforeexit = indicateAbortion;
+            
+            var arg = new Object;
+            arg.imagePath = imagePath;
+            arg.textField = txtFileName;
+            
+            var dictX = new ActiveXObject("Scripting.Dictionary");
+            var dictY = new ActiveXObject("Scripting.Dictionary");
+            
+            for (var i = 0; i < vertices.length; i++) {
+                dictX(i) = vertices[i].x;
+                dictY(i) = vertices[i].y;
+            }
+            
+            arg.verticesX = dictX.Items();
+            arg.verticesY = dictY.Items();
+            
+            arg.indicateStatus = function(s) {
+                spnOperationStatus.innerText = s;
+            };
+            
+            arg.indicateProgress = function(p) {
+                divProgressBar.filters[0].Percent = p;
+                divProgressBar.filters[0].Enabled = true;
+                
+                spnProgress.innerText = p;
+                document.title = appName + " (" + p + "%)";
+            };
+            
+            arg.indicateImageCompletion = function() {
+                divProgressBar.filters[0].Enabled = false;
+                tblFirstStage.style.display = "none";
+                divSecondStage.style.display = "";
+                
+                document.title = appName;
+                
+                btnSaveImage.disabled = false;
+                txtFileName.focus();
+            };
+            
+            arg.returnTo2ndStage = function() {
+                divThirdStage.style.display = "none";
+                divSecondStage.style.display = "";
+                
+                btnSaveImage.style.visibility = "visible";
+                txtFileName.disabled = false;
+                txtFileName.focus();
+            };
+            
+            arg.indicateCompletion = function() {
+                divThirdStage.style.display = "none";
+                divFinalStage.style.display = "";
+            };
+            
+            tmid = cropperThread.start(arg);
+        }
+        
+        function abortPolygonalCrop() {
+            abortionRequest = true;
+            this.disabled = true;
+        }
+        
+        function indicateAbortion() {
+            if (event.exitMode == TEM_EXEC_HALTED) {
+                abortionRequest = false;
+                btnAbort.disabled = false;
+                
+                wshShell.Popup("The cropping operation was aborted!", 0, appName);
+                window.close();
+            }
+        }
+        
+        function saveImage() {
+            if (!txtFileName.value) {
+                alert("The File Name field is empty. Please enter the file path where the resulting image is to be stored.");
+                txtFileName.focus();
+                return;
+            }
+            
+            divSecondStage.style.display = "none";
+            divThirdStage.style.display = "";
+            
+            txtFileName.disabled = true;
+            this.style.visibility = "hidden";
+            
+            cropperThread.resume(tmid);
+        }
+        
+        function launchImage() {
+            event.returnValue = false;
+            
+            var path = txtFileName.value;
+            wshShell.Run('"' + path + '"');
+        }
+        
+        function viewInFolder() {
+            event.returnValue = false;
+            
+            var path = fso.GetParentFolderName(txtFileName.value);
+            shell.Open(path);
+        }
+    </script>
+    
+    <t:thread id="cropperThread" slanguage="jscript">
+    <script>
+        var EC_OPERATION_ABORTED = 1;
+        
+        if (window.abortionRequest)
+            threadc.exit(EC_OPERATION_ABORTED);
+        
+        tparam.indicateStatus("Loading image file...");
+        
+        var imageFile = new ActiveXObject("WIA.ImageFile");
+        imageFile.LoadFile(tparam.imagePath);
+        
+        if (window.abortionRequest)
+            threadc.exit(EC_OPERATION_ABORTED);
+        
+        tparam.indicateStatus("Computing bounding rectangle of the polygon...");
+        
+        var verticesX = (new VBArray(tparam.verticesX)).toArray();
+        var verticesY = (new VBArray(tparam.verticesY)).toArray();
+        
+        var boundingRectMetrics = {
+            left: Math.min.apply(null, verticesX),
+            right: Math.max.apply(null, verticesX),
+            top: Math.min.apply(null, verticesY),
+            bottom: Math.max.apply(null, verticesY)
+        };
+        
+        var ip = new ActiveXObject("WIA.ImageProcess");
+        ip.Filters.Add(ip.FilterInfos("Crop").FilterID);
+        with (ip.Filters(1)) {
+            Properties("Left") = boundingRectMetrics.left;
+            Properties("Right") = imageFile.Width - boundingRectMetrics.right;
+            Properties("Top") = boundingRectMetrics.top;
+            Properties("Bottom") = imageFile.Height - boundingRectMetrics.bottom;
+        }
+        
+        var boundingRect = ip.Apply(imageFile);
+        var raster = boundingRect.ARGBData;
+        
+        if (window.abortionRequest)
+            threadc.exit(EC_OPERATION_ABORTED);
+        
+        tparam.indicateStatus("Rendering the polygonal area...");
+        
+        var x = boundingRectMetrics.left;
+        var y = boundingRectMetrics.top;
+        var pixelCount = raster.Count;
+        var currentProgress = 0;
+        for (var i = 1; i <= pixelCount; i++) {
+            if (!pointInPolygon())
+                raster(i) = 0xFFFFFF;
+            
+            if (x++ == boundingRectMetrics.right) {
+                x = boundingRectMetrics.left;
+                y++;
+            }
+            
+            trackProgress();
+        }
+        
+        tparam.indicateStatus("Creating final PNG...");
+        
+        ip.Filters.Remove(1);
+        
+        var wiaFormatPNG = "{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}";
+        ip.Filters.Add(ip.FilterInfos("ARGB").FilterID);
+        ip.Filters(1).Properties("ARGBData") = raster;
+        ip.Filters.Add(ip.FilterInfos("Convert").FilterID);
+        ip.Filters(2).Properties("FormatID") = wiaFormatPNG;
+        
+        var resImageFile = ip.Apply(boundingRect);
+        
+        if (window.abortionRequest)
+            threadc.exit(EC_OPERATION_ABORTED);
+        
+        tparam.indicateImageCompletion();
+        
+        while (true) {
+            threadc.suspend();
+            
+            var resFileName = tparam.textField.value;
+            if (threadc.fso.FileExists(resFileName)) {
+                if (window.confirm("The file '" + resFileName + "' already exists. Do you want to replace it?")) {
+                    threadc.fso.DeleteFile(resFileName);
+                    break;
+                }
+                else
+                    tparam.returnTo2ndStage();
+            }
+            else
+                break;
+        }
+        
+        resImageFile.SaveFile(resFileName);
+        
+        tparam.indicateCompletion();
+        
+        function pointInPolygon() {
+            var wn = 0;
+            var c = verticesX.length;
+            for (var i = 0; i < c; i++) {
+                var n = (i + 1) % c;
+                var x1 = verticesX[i], y1 = verticesY[i];
+                var x2 = verticesX[n], y2 = verticesY[n];
+                
+                if (y1 <= y) {
+                    if (y2 > y) {
+                        if (crossProduct(x1, y1, x2, y2, x, y) > 0)
+                            wn++;
+                    }
+                }
+                else {
+                    if (y2 <= y) {
+                        if (crossProduct(x1, y1, x2, y2, x, y) < 0)
+                            wn--;
+                    }
+                }
+            }
+            
+            return wn;
+            
+            function crossProduct(x1, y1, x2, y2, x3, y3) {
+                return( (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1) );
+            }
+        }
+        
+        function trackProgress() {
+            var progress = Math.floor(i / pixelCount * 100);
+            if (progress > currentProgress) {
+                tparam.indicateProgress(currentProgress = progress);
+                
+                if (window.abortionRequest)
+                    threadc.exit(EC_OPERATION_ABORTED);
+            }
+        }
+    </script>
+    </t:thread>
+</head>
+<body scroll="no">
+    <div id="startingPage" class="page">
+        <h1>Crop a polygonal area from an image</h1>
+        <button id="btnOpenImage">Open image</button>
+        <object id="objDialogHelper" classid="CLSID:3050f4e1-98b5-11cf-bb82-00aa00bdce0b" height="0" width="0"></object>
+    </div>
+    <table id="polygonPage" border="1px" style="display: none;">
+        <tr>
+            <td id="statusBar" colspan="2" valign="middle" bgcolor="threedface" height="30px">
+                Zoom: <fc:intbox id="intImageZoom" min="0" value="100" />
+                Opacity: <fc:intbox id="intImageOpacity" min="0" max="100" value="60" />
+                <button id="btnFitImage">Fit to window</button>
+                <v:image src="ui\position.png" style="width: 24px; height: 24px; vertical-align: middle;" />
+                <span id="spnCursorPosition"></span>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="white">
+                <div id="divImageContainer">
+                    <v:image id="userImage" />
+                    <v:shape id="polygonCanvas" strokecolor="red" strokeweight="2px" filled="False" />
+                </div>
+            </td>
+            <td id="cropPanel" align="center" bgcolor="threedface" width="260px">
+                <table id="tblPolygonPointsActions" width="240px">
+                    <caption>Polygon Vertices</caption>
+                    <tr>
+                        <td align="left" valign="middle">
+                            <button id="btnAddPoint">Add</button>
+                        </td>
+                        <td align="center" valign="middle">
+                            <button id="btnRemovePoint" disabled>Remove</button>
+                        </td>
+                        <td align="right" valign="middle">
+                            <button id="btnClearPolygon" disabled>Clear</button>
+                        </td>
+                    </tr>
+                </table>
+                
+                <div id="divPolygonPointsContainer">
+                    <table id="tblPolygonPoints" width="100%" border="1px" bordercolor="black">
+                        <tr>
+                            <th align="center" valign="middle">N</th>
+                            <th align="center" valign="middle">X</th>
+                            <th align="center" valign="middle">Y</th>
+                        </tr>
+                    </table>
+                </div>
+                
+                <button id="btnCrop">Crop</button>
+            </td>
+        </tr>
+    </table>
+    <div id="operationPage" class="page" style="display: none;">
+        <table id="tblFirstStage" width="100%" cellpadding="8px">
+            <tr>
+                <td align="left" style="font-size: large;">
+                    Cropping the image...
+                </td>
+                <td align="right">
+                    <button id="btnAbort">Abort</button>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div id="divProgressBar"></div>
+                </td>
+            </tr>
+            <tr>
+                <td align="left">
+                    <span style="color: blue;">Status:</span>
+                    <span id="spnOperationStatus"></span>
+                </td>
+                <td align="right">
+                    <span id="spnProgress">0</span>%
+                </td>
+            </tr>
+        </table>
+        
+        <div id="divSecondStage" style="display: none;">
+            <h1>Time to save the image</h1>
+            <p>Cropping was completed and the resultant PNG image has been stored in memory. To save the image on disk, please enter a file name in the field below and then click the Save button.</p>
+        </div>
+        
+        <div id="divThirdStage" style="display: none;">
+            <h1>Saving image file...</h1>
+            <v:image src="ui\progbar.gif" />
+        </div>
+        
+        <div id="divFinalStage" style="display: none;">
+            <h1>Operation completed!</h1>
+            <p>The image was successfully cropped and the resultant image file has been stored in the specified location. You can now <a href="#" onclick="launchImage()">open the file</a> or <a href="#" onclick="viewInFolder()">its containing folder</a>.</p>
+        </div>
+        
+        <fieldset style="width: 100%; margin: 10px; padding: 10px;">
+            <legend>File name</legend>
+            <input type="text" id="txtFileName" style="width: 100%;">
+            <center><button id="btnSaveImage" disabled>Save</button></center>
+        </fieldset>
+    </div>
+</body>
+</html>

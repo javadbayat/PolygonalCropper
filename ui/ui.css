@@ -1,0 +1,142 @@
+v\:* {
+    behavior: url(#default#VML);
+    display: inline-block;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: verdana;
+}
+
+.page {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#startingPage {
+    background-color: #ffffcc;
+    text-align: center;
+    cursor: default;
+}
+
+#btnOpenImage {
+    zoom: 150%;
+}
+
+#intImageZoom, #intImageOpacity, #btnFitImage {
+    margin-right: 10px;
+}
+
+#divImageContainer {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    cursor: default;
+}
+
+#userImage {
+    filter:
+        progid:DXImageTransform.Microsoft.BasicImage( opacity=.6 );
+}
+
+#polygonCanvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+#tblPolygonPointsActions {
+    cursor: default;
+}
+
+#divPolygonPointsContainer {
+    width: 240px;
+    border: 1px solid black;
+    background-color: white;
+    overflow: auto;
+}
+
+#tblPolygonPoints {
+    border-collapse: collapse;
+}
+
+#tblPolygonPoints td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+#tblPolygonPoints input {
+    text-align: center;
+}
+
+#btnCrop {
+    width: 240px;
+    height: 30px;
+    margin-top: 5px;
+    font-size: larger;
+}
+
+#operationPage {
+    background-color: #9ef3bc;
+}
+
+#tblFirstStage {
+    cursor: default;
+}
+
+#btnAbort {
+    color: red;
+    zoom: 140%;
+}
+
+#btnSaveImage {
+    margin-top: 5px;
+    zoom: 150%;
+}
+
+#divProgressBar {
+    width: 100%;
+    height: 40px;
+    border: 1px solid black;
+    filter: revealTrans( transition=6 );
+}
+
+#divSecondStage, #divThirdStage, #divFinalStage {
+    width: 100%;
+    padding: 8px;
+    cursor: default;
+}
+
+#divSecondStage h1 {
+    font-size: large;
+    color: purple;
+}
+
+#divThirdStage h1 {
+    font-size: large;
+}
+
+#divThirdStage v\:image {
+    width: 100%;
+    height: 40px;
+}
+
+#divFinalStage h1 {
+    font-size: large;
+    color: purple;
+}
+
+a {
+    text-decoration: none;
+    cursor: hand;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: red;
+}
