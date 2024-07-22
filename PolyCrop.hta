@@ -190,7 +190,7 @@
             if (!pointInPolygon())
                 raster(i) = 0xFFFFFF;
             
-            if (x++ == boundingRectMetrics.right) {
+            if (++x == boundingRectMetrics.right) {
                 x = boundingRectMetrics.left;
                 y++;
             }
