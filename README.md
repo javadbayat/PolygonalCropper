@@ -13,7 +13,7 @@ If you need to remove one or more records from the **Polygon Vertices** table, y
 ## Drawing a polygon with mouse
 If the manual method to specify the polygon is impractical or too dificult, you can easily draw the polygon using mouse, just like the *Pen Tool in Adobe Illustrator* does. To do so, you must make a series of mouse clicks over the image in the left panel to insert each vertex of the polygon. (Note that the **Polygon Vertices** table must be empty to start drawing a polygon using mouse.) After you inserted the last vertex, you can do either of the following to "close" the polygon shape (so a straight line is drawn from the last vertex to the starting point):
 
-- Simply use your mouse to join the last vertex to the starting point. Note that the cursor must change to **a circle with plust sign** when your mouse hovers the starting point, so that you can then click to join the points.
+- Simply use your mouse to join the last vertex to the starting point. Note that the cursor must change to **a circle with plus sign** when your mouse hovers the starting point, so that you can then click to join the points.
 - Press **Enter** on the keyboard.
 - Make the last vertex with a double click instead of a single click, so that the polygon gets closed automatically after insertion of the vertex.
 
