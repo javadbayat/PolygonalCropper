@@ -238,20 +238,20 @@
         function pointInPolygon() {
             var wn = 0;
             var c = verticesX.length;
-            for (var i = 0; i < c; i++) {
-                var n = (i + 1) % c;
-                var x1 = verticesX[i], y1 = verticesY[i];
-                var x2 = verticesX[n], y2 = verticesY[n];
+            var i = 0, j = c - 1;
+            for (; i < c; j = i++) {
+                var xi = verticesX[i], yi = verticesY[i];
+                var xj = verticesX[j], yj = verticesY[j];
                 
-                if (y1 <= y) {
-                    if (y2 > y) {
-                        if (crossProduct(x1, y1, x2, y2, x, y) > 0)
+                if (yj <= y) {
+                    if (yi > y) {
+                        if (crossProduct(xj, yj, xi, yi, x, y) > 0)
                             wn++;
                     }
                 }
                 else {
-                    if (y2 <= y) {
-                        if (crossProduct(x1, y1, x2, y2, x, y) < 0)
+                    if (yi <= y) {
+                        if (crossProduct(xj, yj, xi, yi, x, y) < 0)
                             wn--;
                     }
                 }
