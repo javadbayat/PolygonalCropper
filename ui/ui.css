@@ -30,6 +30,11 @@ body {
     margin-right: 10px;
 }
 
+#spnCursorPosition {
+    display: inline-block;
+    width: 140px;
+}
+
 #divImageContainer {
     margin: 0;
     padding: 0;

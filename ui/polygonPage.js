@@ -104,6 +104,9 @@ function initPolygonPage() {
     polygonCanvas.coordsize.X = imageWidth;
     polygonCanvas.coordsize.Y = imageHeight;
     
+    var xSymbol = String.fromCharCode(32, 215, 32);
+    spnImageDimensions.innerText = imageWidth + xSymbol + imageHeight + "px";
+    
     document.onkeyup = keyHandler;
     document.onkeydown = nudgePoint;
     
@@ -455,7 +458,7 @@ function keyHandler() {
     case 46 :
         btnRemovePoint.click();
         break;
-    case 67 :
+    case 8 :
         if (event.ctrlKey)
             btnClearPolygon.click();
         break;
@@ -466,6 +469,10 @@ function keyHandler() {
     case 73 :
         if (event.ctrlKey)
             inversePointSelection();
+        break;
+    case 67 :
+        if (event.ctrlKey)
+            btnCrop.click();
         break;
     }
 }
