@@ -25,6 +25,8 @@
         var TEM_EXEC_HALTED = 1;
 
         function initiatePolygonalCrop(imagePath, vertices) {
+            wshShell.CurrentDirectory = wshShell.SpecialFolders("Desktop");
+            
             operationPage.style.display = "";
             document.title = appName + " (0%)";
             
@@ -114,6 +116,9 @@
                 return;
             }
             
+            if (!fso.GetExtensionName(txtFileName.value))
+                txtFileName.value += ".png";
+            
             divSecondStage.style.display = "none";
             divThirdStage.style.display = "";
             
@@ -134,7 +139,7 @@
             event.returnValue = false;
             
             var path = fso.GetParentFolderName(txtFileName.value);
-            shell.Open(path);
+            shell.Open(path ? path : wshShell.CurrentDirectory);
         }
     </script>
     
@@ -290,6 +295,8 @@
                 <button id="btnFitImage">Fit to window</button>
                 <v:image src="ui\position.png" style="width: 24px; height: 24px; vertical-align: middle;" />
                 <span id="spnCursorPosition"></span>
+                <v:image src="ui\dimensions.png" style="width: 24px; height: 24px; vertical-align: middle;" />
+                <span id="spnImageDimensions"></span>
             </td>
         </tr>
         <tr>
