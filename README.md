@@ -1,5 +1,5 @@
 # Polygonal Cropper
-With this app, you draw a polygon over an image. Only the inner area of the polygon will be visible in the resulting image. The parts of the image that lie outside of the polygon will be removed. The functionality of this app is similar to the **Polygonal Lasso tool** of **Adobe Photoshop**.
+With this app, you draw a polygon over an image. Only the inner area of the polygon will be visible in the resulting image. The parts of the image that lie outside of the polygon will be removed.
 
 After launching the app, the first thing to do is click the **Open image** button and then select your desired image file in the Browse dialog box that appears. Then you'll see another screen which displays the image in the left panel and lets you specify the polygonal area that is to be cropped from the image.
 
